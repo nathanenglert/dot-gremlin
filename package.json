@@ -1,0 +1,9 @@
+{
+  "name": "dot-gremlin",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A tamagotchi-like gremlin for Claude Code",
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  }
+}
