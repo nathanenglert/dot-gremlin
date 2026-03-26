@@ -48,7 +48,7 @@ function renderStatusLine(state, mood, flavorText, artDir = DEFAULT_ART_DIR) {
   for (let i = 0; i < maxLines; i++) {
     const artPart = padded[i] || ' '.repeat(maxArtWidth);
     const infoPart = infoLines[i] || '';
-    lines.push(`${artPart}   ${infoPart}`);
+    lines.push(`\u2502 ${artPart}   ${infoPart}`);
   }
 
   return lines.join('\n');
