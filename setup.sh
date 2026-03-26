@@ -37,19 +37,24 @@ try {
 if (!settings.hooks) settings.hooks = {};
 
 const hookConfigs = {
-  SessionStart: { command: path.join(installDir, 'hooks', 'session-start.sh') },
-  Stop: { command: path.join(installDir, 'hooks', 'stop.sh') },
-  PostToolUse: { command: path.join(installDir, 'hooks', 'post-tool-use.sh') },
-  UserPromptSubmit: { command: path.join(installDir, 'hooks', 'user-prompt-submit.sh') },
+  SessionStart: { matcher: '', command: path.join(installDir, 'hooks', 'session-start.sh') },
+  Stop: { matcher: '', command: path.join(installDir, 'hooks', 'stop.sh') },
+  PostToolUse: { matcher: '', command: path.join(installDir, 'hooks', 'post-tool-use.sh') },
+  UserPromptSubmit: { matcher: '', command: path.join(installDir, 'hooks', 'user-prompt-submit.sh') },
 };
 
 for (const [event, config] of Object.entries(hookConfigs)) {
   if (!settings.hooks[event]) settings.hooks[event] = [];
-  const existing = settings.hooks[event].find(h => h.command && h.command.includes('gremlin'));
+  const existing = settings.hooks[event].find(
+    entry => entry.hooks && entry.hooks.some(h => h.command && h.command.includes('gremlin'))
+  );
   if (!existing) {
     settings.hooks[event].push({
-      type: 'command',
-      command: config.command,
+      matcher: config.matcher,
+      hooks: [{
+        type: 'command',
+        command: config.command,
+      }],
     });
   }
 }
