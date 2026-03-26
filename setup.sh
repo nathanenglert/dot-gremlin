@@ -17,10 +17,6 @@ if [ ! -f "$SETTINGS_FILE" ]; then
   echo '{}' > "$SETTINGS_FILE"
 fi
 
-# Update SKILL.md with actual install path
-SKILL_DIR="$INSTALL_DIR/skills/gremlin"
-sed -i.bak "s|GREMLIN_INSTALL_DIR|$INSTALL_DIR|g" "$SKILL_DIR/SKILL.md" && rm -f "$SKILL_DIR/SKILL.md.bak"
-
 # Add hooks to settings.json using node (available since Claude Code requires it)
 node -e "
 const fs = require('fs');
@@ -89,10 +85,11 @@ fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
 console.log('Status line configured');
 "
 
-# Copy skill to user skills directory
+# Copy skill to user skills directory and resolve install path
 SKILL_DEST="$CLAUDE_DIR/skills/gremlin"
 mkdir -p "$SKILL_DEST"
 cp "$INSTALL_DIR/skills/gremlin/SKILL.md" "$SKILL_DEST/SKILL.md"
+sed -i.bak "s|GREMLIN_INSTALL_DIR|$INSTALL_DIR|g" "$SKILL_DEST/SKILL.md" && rm -f "$SKILL_DEST/SKILL.md.bak"
 echo "Skill installed to $SKILL_DEST"
 
 echo ""
