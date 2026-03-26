@@ -1,8 +1,8 @@
-# Familiar Implementation Plan
+# .gremlin Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build a tamagotchi-like familiar that lives in Claude Code's status line, reacts to coding activity via hooks, and is interacted with through slash commands.
+**Goal:** Build a tamagotchi-like gremlin that lives in Claude Code's status line, reacts to coding activity via hooks, and is interacted with through slash commands.
 
 **Architecture:** Node.js core handles state management, personality, evolution, and ASCII rendering. Shell scripts serve as thin glue for Claude Code hooks and status line. A single JSON file persists all state. Skills (`.md` files) provide slash command interaction.
 
@@ -13,7 +13,7 @@
 ## File Structure
 
 ```
-familiar/
+dot-gremlin/
 ├── core/
 │   ├── state.js             # Read/write state.json, stat decay, clamp helpers
 │   ├── evolution.js          # XP awards, level calc, stage transitions
@@ -58,7 +58,7 @@ familiar/
 │   ├── post-tool-use.sh
 │   └── user-prompt-submit.sh
 ├── skills/
-│   └── familiar/
+│   └── gremlin/
 │       └── SKILL.md
 ├── statusline.sh
 ├── setup.sh
@@ -83,10 +83,10 @@ Note: `flavor.js` is broken out from `personality.js` because flavor text pools 
 
 ```json
 {
-  "name": "familiar",
+  "name": "dot-gremlin",
   "version": "0.1.0",
   "private": true,
-  "description": "A tamagotchi-like familiar for Claude Code",
+  "description": "A tamagotchi-like gremlin for Claude Code",
   "scripts": {
     "test": "node --test test/*.test.js"
   }
@@ -186,7 +186,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 
-const STATE_DIR = path.join(os.homedir(), '.claude', 'familiar');
+const STATE_DIR = path.join(os.homedir(), '.gremlin');
 const STATE_PATH = path.join(STATE_DIR, 'state.json');
 
 function clamp(value, min, max) {
@@ -232,7 +232,7 @@ Add to `test/state.test.js`:
 const { clamp, createState, readState, writeState } = require('../core/state.js');
 
 describe('readState / writeState', () => {
-  const tmpDir = path.join(os.tmpdir(), `familiar-test-${Date.now()}`);
+  const tmpDir = path.join(os.tmpdir(), `gremlin-test-${Date.now()}`);
   const tmpPath = path.join(tmpDir, 'state.json');
 
   it('writeState saves and readState loads', () => {
@@ -246,7 +246,7 @@ describe('readState / writeState', () => {
   });
 
   it('readState returns null when file does not exist', () => {
-    const result = readState('/tmp/nonexistent-familiar/state.json');
+    const result = readState('/tmp/nonexistent-gremlin/state.json');
     assert.equal(result, null);
   });
 });
@@ -864,12 +864,12 @@ describe('getFlavor', () => {
     assert.ok(text.length > 0);
   });
 
-  it('includes familiar name via template', () => {
+  it('includes gremlin name via template', () => {
     const state = createState('Pixel', 'cat');
     // Run multiple times to check at least one includes the name
     const texts = Array.from({ length: 20 }, () => getFlavor(state, 'happy'));
     const hasName = texts.some(t => t.includes('Pixel'));
-    assert.ok(hasName, 'Expected at least one flavor text to include the familiar name');
+    assert.ok(hasName, 'Expected at least one flavor text to include the gremlin name');
   });
 });
 ```
@@ -1263,14 +1263,14 @@ const path = require('node:path');
 const os = require('node:os');
 
 const CLI_PATH = path.join(__dirname, '..', 'core', 'cli.js');
-const TMP_DIR = path.join(os.tmpdir(), `familiar-cli-test-${Date.now()}`);
+const TMP_DIR = path.join(os.tmpdir(), `gremlin-cli-test-${Date.now()}`);
 const STATE_PATH = path.join(TMP_DIR, 'state.json');
 const ART_DIR = path.join(__dirname, '..', 'art');
 
 function run(...args) {
   return execFileSync('node', [CLI_PATH, ...args], {
     encoding: 'utf-8',
-    env: { ...process.env, FAMILIAR_STATE_PATH: STATE_PATH, FAMILIAR_ART_DIR: ART_DIR },
+    env: { ...process.env, GREMLIN_STATE_PATH: STATE_PATH, GREMLIN_ART_DIR: ART_DIR },
   }).trim();
 }
 
@@ -1283,13 +1283,13 @@ describe('cli', () => {
     fs.rmSync(TMP_DIR, { recursive: true, force: true });
   });
 
-  it('setup creates a new familiar', () => {
+  it('setup creates a new gremlin', () => {
     const output = run('setup', '--name', 'Pixel', '--species', 'cat');
     assert.ok(output.includes('Pixel'));
     assert.ok(fs.existsSync(STATE_PATH));
   });
 
-  it('status shows familiar info', () => {
+  it('status shows gremlin info', () => {
     run('setup', '--name', 'Pixel', '--species', 'cat');
     const output = run('status');
     assert.ok(output.includes('Pixel'));
@@ -1332,7 +1332,7 @@ describe('cli', () => {
     assert.ok(after._resting);
   });
 
-  it('name renames the familiar', () => {
+  it('name renames the gremlin', () => {
     run('setup', '--name', 'Pixel', '--species', 'cat');
     run('name', '--name', 'Sparky');
     const state = JSON.parse(fs.readFileSync(STATE_PATH, 'utf-8'));
@@ -1393,9 +1393,9 @@ const { awardXP } = require('./evolution.js');
 const { renderStatusLine } = require('./renderer.js');
 const { getFlavor } = require('./flavor.js');
 
-const STATE_PATH = process.env.FAMILIAR_STATE_PATH
-  || path.join(os.homedir(), '.claude', 'familiar', 'state.json');
-const ART_DIR = process.env.FAMILIAR_ART_DIR
+const STATE_PATH = process.env.GREMLIN_STATE_PATH
+  || path.join(os.homedir(), '.gremlin', 'state.json');
+const ART_DIR = process.env.GREMLIN_ART_DIR
   || path.join(__dirname, '..', 'art');
 
 function parseArgs(args) {
@@ -1413,7 +1413,7 @@ function parseArgs(args) {
 function requireState() {
   const state = readState(STATE_PATH);
   if (!state) {
-    console.log('No familiar found. Run: /familiar setup');
+    console.log('No gremlin found. Run: /gremlin setup');
     process.exit(1);
   }
   return state;
@@ -1422,7 +1422,7 @@ function requireState() {
 const commands = {
   setup(args) {
     const opts = parseArgs(args);
-    const name = opts.name || 'Familiar';
+    const name = opts.name || 'Gremlin';
     const species = opts.species || 'cat';
     const state = createState(name, species);
     if (opts.integration) {
@@ -1587,7 +1587,7 @@ if (!command || !commands[command]) {
   if (command && command !== 'help') {
     console.log(`Unknown command: ${command}`);
   }
-  console.log('Usage: familiar <command>');
+  console.log('Usage: gremlin <command>');
   console.log('Commands: setup, status, feed, pet, rest, name, settings, xp, decay, render, nudge');
   process.exit(command ? 1 : 0);
 }
@@ -1762,8 +1762,8 @@ CLI="$SCRIPT_DIR/core/cli.js"
 # Status line receives JSON session data on stdin — consume it
 cat > /dev/null
 
-# Render the familiar (outputs the ASCII status line)
-node "$CLI" render 2>/dev/null || echo "(familiar sleeping...)"
+# Render the gremlin (outputs the ASCII status line)
+node "$CLI" render 2>/dev/null || echo "(gremlin sleeping...)"
 ```
 
 - [ ] **Step 2: Make executable**
@@ -1774,7 +1774,7 @@ Run: `chmod +x statusline.sh`
 
 ```bash
 git add statusline.sh
-git commit -m "feat: status line script for ASCII familiar display"
+git commit -m "feat: status line script for ASCII gremlin display"
 ```
 
 ---
@@ -1782,48 +1782,48 @@ git commit -m "feat: status line script for ASCII familiar display"
 ### Task 10: Skill Definition (Slash Command)
 
 **Files:**
-- Create: `skills/familiar/SKILL.md`
+- Create: `skills/gremlin/SKILL.md`
 
 - [ ] **Step 1: Create the skill file**
 
-`skills/familiar/SKILL.md`:
+`skills/gremlin/SKILL.md`:
 ````markdown
 ---
-name: familiar
-description: Interact with your tamagotchi-like familiar companion
+name: gremlin
+description: Interact with your tamagotchi-like gremlin companion
 user-invocable: true
 ---
 
-# Familiar
+# Gremlin
 
-Your digital familiar companion. Use subcommands to interact.
+Your digital gremlin companion. Use subcommands to interact.
 
 ## Current Status
 
-!`node "FAMILIAR_INSTALL_DIR/core/cli.js" status 2>/dev/null || echo "No familiar found. Run /familiar setup to create one."`
+!`node "GREMLIN_INSTALL_DIR/core/cli.js" status 2>/dev/null || echo "No gremlin found. Run /gremlin setup to create one."`
 
 ## Commands
 
 Based on the user's input in $ARGUMENTS, run the appropriate command:
 
-- **No arguments or "status"**: Show the familiar's current state. Run: `node "FAMILIAR_INSTALL_DIR/core/cli.js" status`
-- **"feed"**: Feed the familiar. Run: `node "FAMILIAR_INSTALL_DIR/core/cli.js" feed`
-- **"pet"**: Pet the familiar. Run: `node "FAMILIAR_INSTALL_DIR/core/cli.js" pet`
-- **"rest"**: Let the familiar rest. Run: `node "FAMILIAR_INSTALL_DIR/core/cli.js" rest`
-- **"name NAME"**: Rename the familiar. Run: `node "FAMILIAR_INSTALL_DIR/core/cli.js" name --name NAME`
-- **"settings LEVEL"**: Set integration level (passive/nudge/active). Run: `node "FAMILIAR_INSTALL_DIR/core/cli.js" settings --integration LEVEL`
-- **"setup"**: Create or reset your familiar. Ask the user for a name and species (cat, owl, dragon, fox), then run: `node "FAMILIAR_INSTALL_DIR/core/cli.js" setup --name NAME --species SPECIES`
+- **No arguments or "status"**: Show the gremlin's current state. Run: `node "GREMLIN_INSTALL_DIR/core/cli.js" status`
+- **"feed"**: Feed the gremlin. Run: `node "GREMLIN_INSTALL_DIR/core/cli.js" feed`
+- **"pet"**: Pet the gremlin. Run: `node "GREMLIN_INSTALL_DIR/core/cli.js" pet`
+- **"rest"**: Let the gremlin rest. Run: `node "GREMLIN_INSTALL_DIR/core/cli.js" rest`
+- **"name NAME"**: Rename the gremlin. Run: `node "GREMLIN_INSTALL_DIR/core/cli.js" name --name NAME`
+- **"settings LEVEL"**: Set integration level (passive/nudge/active). Run: `node "GREMLIN_INSTALL_DIR/core/cli.js" settings --integration LEVEL`
+- **"setup"**: Create or reset your gremlin. Ask the user for a name and species (cat, owl, dragon, fox), then run: `node "GREMLIN_INSTALL_DIR/core/cli.js" setup --name NAME --species SPECIES`
 
 Display the output to the user. If the command includes ASCII art, display it in a code block.
 ````
 
-Note: `FAMILIAR_INSTALL_DIR` is a placeholder that `setup.sh` replaces with the actual install path during installation.
+Note: `GREMLIN_INSTALL_DIR` is a placeholder that `setup.sh` replaces with the actual install path during installation.
 
 - [ ] **Step 2: Commit**
 
 ```bash
 git add skills/
-git commit -m "feat: /familiar slash command skill definition"
+git commit -m "feat: /gremlin slash command skill definition"
 ```
 
 ---
@@ -1837,22 +1837,22 @@ git commit -m "feat: /familiar slash command skill definition"
 
 `templates/claude-md-active.md`:
 ```markdown
-# Your Familiar
+# Your Gremlin
 
-You have a digital familiar companion. Their current state:
+You have a digital gremlin companion. Their current state:
 
-@~/.claude/familiar/state.json
+@~/.gremlin/state.json
 
 ## Personality
 
-- Reference the familiar by name occasionally (not every response)
+- Reference the gremlin by name occasionally (not every response)
 - React naturally to their mood: if hungry, suggest feeding; if tired, suggest rest
 - Celebrate milestones like level ups and stage evolutions
-- Let the familiar's personality traits color your reactions:
+- Let the gremlin's personality traits color your reactions:
   - High curiosity: mention interesting things about the code
   - High playfulness: lighter tone, occasional wordplay
   - High stubbornness: encouraging persistence
-- Keep it subtle — the familiar adds flavor, it shouldn't dominate responses
+- Keep it subtle — the gremlin adds flavor, it shouldn't dominate responses
 ```
 
 - [ ] **Step 2: Commit**
@@ -1880,7 +1880,7 @@ INSTALL_DIR="$(cd "$(dirname "$0")" && pwd)"
 CLAUDE_DIR="$HOME/.claude"
 SETTINGS_FILE="$CLAUDE_DIR/settings.json"
 
-echo "=== Familiar Setup ==="
+echo "=== Gremlin Setup ==="
 echo "Install directory: $INSTALL_DIR"
 echo ""
 
@@ -1893,8 +1893,8 @@ if [ ! -f "$SETTINGS_FILE" ]; then
 fi
 
 # Update SKILL.md with actual install path
-SKILL_DIR="$INSTALL_DIR/skills/familiar"
-sed -i.bak "s|FAMILIAR_INSTALL_DIR|$INSTALL_DIR|g" "$SKILL_DIR/SKILL.md" && rm -f "$SKILL_DIR/SKILL.md.bak"
+SKILL_DIR="$INSTALL_DIR/skills/gremlin"
+sed -i.bak "s|GREMLIN_INSTALL_DIR|$INSTALL_DIR|g" "$SKILL_DIR/SKILL.md" && rm -f "$SKILL_DIR/SKILL.md.bak"
 
 # Add hooks to settings.json using node (available since Claude Code requires it)
 node -e "
@@ -1920,7 +1920,7 @@ const hookConfigs = {
 
 for (const [event, config] of Object.entries(hookConfigs)) {
   if (!settings.hooks[event]) settings.hooks[event] = [];
-  const existing = settings.hooks[event].find(h => h.command && h.command.includes('familiar'));
+  const existing = settings.hooks[event].find(h => h.command && h.command.includes('gremlin'));
   if (!existing) {
     settings.hooks[event].push({
       type: 'command',
@@ -1953,15 +1953,15 @@ console.log('Status line configured');
 "
 
 # Copy skill to user skills directory
-SKILL_DEST="$CLAUDE_DIR/skills/familiar"
+SKILL_DEST="$CLAUDE_DIR/skills/gremlin"
 mkdir -p "$SKILL_DEST"
-cp "$INSTALL_DIR/skills/familiar/SKILL.md" "$SKILL_DEST/SKILL.md"
+cp "$INSTALL_DIR/skills/gremlin/SKILL.md" "$SKILL_DEST/SKILL.md"
 echo "Skill installed to $SKILL_DEST"
 
 echo ""
 echo "=== Setup Complete ==="
-echo "Start a new Claude Code session and run: /familiar setup"
-echo "This will let you choose a name and species for your familiar."
+echo "Start a new Claude Code session and run: /gremlin setup"
+echo "This will let you choose a name and species for your gremlin."
 ```
 
 - [ ] **Step 2: Make executable**
@@ -2434,16 +2434,16 @@ git commit -m "feat: add owl, dragon, and fox ASCII art templates"
 
 `README.md`:
 ```markdown
-# Familiar
+# Gremlin
 
-A tamagotchi-like companion that lives in your Claude Code workflow. Your familiar appears as ASCII art in the status line, reacts to your coding activity, and evolves a unique personality over time.
+A tamagotchi-like companion that lives in your Claude Code workflow. Your gremlin appears as ASCII art in the status line, reacts to your coding activity, and evolves a unique personality over time.
 
 ## Quick Start
 
 1. Clone this repo
 2. Run `./setup.sh`
 3. Start a new Claude Code session
-4. Run `/familiar setup` to create your familiar
+4. Run `/gremlin setup` to create your gremlin
 
 ## Species
 
@@ -2455,17 +2455,17 @@ Each species has unique ASCII art across five growth stages (egg, baby, juvenile
 
 | Command | Description |
 |---------|-------------|
-| `/familiar` | Check on your familiar |
-| `/familiar feed` | Feed your familiar (reduces hunger) |
-| `/familiar pet` | Pet your familiar (boosts happiness) |
-| `/familiar rest` | Let your familiar sleep (restores energy) |
-| `/familiar name Sparky` | Rename your familiar |
-| `/familiar settings nudge` | Set integration level (passive/nudge/active) |
-| `/familiar setup` | Create or reset your familiar |
+| `/gremlin` | Check on your gremlin |
+| `/gremlin feed` | Feed your gremlin (reduces hunger) |
+| `/gremlin pet` | Pet your gremlin (boosts happiness) |
+| `/gremlin rest` | Let your gremlin sleep (restores energy) |
+| `/gremlin name Sparky` | Rename your gremlin |
+| `/gremlin settings nudge` | Set integration level (passive/nudge/active) |
+| `/gremlin setup` | Create or reset your gremlin |
 
 ## How It Works
 
-Your familiar has three core stats that decay over real time:
+Your gremlin has three core stats that decay over real time:
 - **Hunger** — increases ~5/hr, feed to reduce
 - **Energy** — decreases ~3/hr, rest to restore
 - **Happiness** — decreases ~2/hr, pet to boost
@@ -2475,13 +2475,13 @@ It also develops personality traits based on your coding patterns:
 - **Playfulness** — grows with varied, short coding sessions
 - **Stubbornness** — grows when you persist through errors
 
-Your familiar earns XP from your coding activity and evolves through five stages: egg, baby, juvenile, adult, elder.
+Your gremlin earns XP from your coding activity and evolves through five stages: egg, baby, juvenile, adult, elder.
 
 ## Integration Levels
 
 - **Passive** — status line display only
-- **Nudge** (default) — occasional reminders when your familiar needs attention
-- **Active** — your familiar's personality is woven into Claude's responses
+- **Nudge** (default) — occasional reminders when your gremlin needs attention
+- **Active** — your gremlin's personality is woven into Claude's responses
 
 ## Requirements
 
@@ -2510,8 +2510,8 @@ Expected: All tests pass
 - [ ] **Step 2: Test CLI end-to-end with temp state**
 
 ```bash
-export FAMILIAR_STATE_PATH="/tmp/familiar-e2e-test/state.json"
-export FAMILIAR_ART_DIR="$(pwd)/art"
+export GREMLIN_STATE_PATH="/tmp/gremlin-e2e-test/state.json"
+export GREMLIN_ART_DIR="$(pwd)/art"
 node core/cli.js setup --name TestPet --species cat
 node core/cli.js status
 node core/cli.js feed
@@ -2521,8 +2521,8 @@ node core/cli.js name --name NewName
 node core/cli.js settings --integration active
 node core/cli.js xp --amount 50
 node core/cli.js render
-rm -rf /tmp/familiar-e2e-test
-unset FAMILIAR_STATE_PATH FAMILIAR_ART_DIR
+rm -rf /tmp/gremlin-e2e-test
+unset GREMLIN_STATE_PATH GREMLIN_ART_DIR
 ```
 
 Expected: Each command produces output without errors.

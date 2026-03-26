@@ -1,17 +1,17 @@
-# Familiar: A Tamagotchi-Like Companion for Claude Code
+# .gremlin: A Tamagotchi-Like Companion for Claude Code
 
-A digital familiar that lives in your Claude Code workflow. It appears as ASCII art in the status line, reacts to your coding activity, and evolves a unique personality over time. Users interact with it through slash commands and it integrates via Claude Code hooks.
+A digital gremlin that lives in your Claude Code workflow. It appears as ASCII art in the status line, reacts to your coding activity, and evolves a unique personality over time. Users interact with it through slash commands and it integrates via Claude Code hooks.
 
 ## Core Concept
 
-One familiar per user (global), user-defined at creation (pick species, name). It travels across projects with project awareness. Integration level is configurable:
+One gremlin per user (global), user-defined at creation (pick species, name). It travels across projects with project awareness. Integration level is configurable:
 - **Passive**: status line display only. No context injected into Claude's conversation.
-- **Nudge** (default): status line display + occasional one-liner injected via hook stdout (~1 in 10 prompts, only when familiar needs attention).
-- **Active**: status line display + CLAUDE.md imports familiar state and personality instructions, so Claude naturally references the familiar in responses. The setup script copies a CLAUDE.md template to `~/.claude/CLAUDE.md` (or appends to it) that uses `@~/.claude/familiar/state.json` to pull live state.
+- **Nudge** (default): status line display + occasional one-liner injected via hook stdout (~1 in 10 prompts, only when gremlin needs attention).
+- **Active**: status line display + CLAUDE.md imports gremlin state and personality instructions, so Claude naturally references the gremlin in responses. The setup script copies a CLAUDE.md template to `~/.claude/CLAUDE.md` (or appends to it) that uses `@~/.gremlin/state.json` to pull live state.
 
 ## State Model
 
-State lives in `~/.claude/familiar/state.json`:
+State lives in `~/.gremlin/state.json`:
 
 ```json
 {
@@ -134,8 +134,8 @@ Plain text files with ANSI color placeholders. New species are added by creating
 
 - Calculates time-based stat decay since last session
 - Updates state file
-- If nudge/active mode, outputs familiar status to stdout (injected as Claude context)
-- Example: "Your familiar Pixel (Lv.3 cat) is hungry and could use some attention."
+- If nudge/active mode, outputs gremlin status to stdout (injected as Claude context)
+- Example: "Your gremlin Pixel (Lv.3 cat) is hungry and could use some attention."
 
 ### Stop
 
@@ -153,49 +153,49 @@ Coding-aware reactions:
 ### UserPromptSubmit
 
 - Counts prompts for XP/stats
-- In nudge mode, occasionally injects a one-liner (~1 in 10 prompts) if familiar needs attention
+- In nudge mode, occasionally injects a one-liner (~1 in 10 prompts) if gremlin needs attention
 
 ### Hooks NOT Used
 
 - **CwdChanged**: too noisy, project awareness handled via SessionStart
-- **Notification**: reserved for critical states only (familiar about to "run away" from severe neglect)
+- **Notification**: reserved for critical states only (gremlin about to "run away" from severe neglect)
 
 ## Skills (Slash Commands)
 
-All skills call into the Node.js core via `node ~/.claude/familiar/core/cli.js <command>`.
+All skills call into the Node.js core via `node ~/.gremlin/core/cli.js <command>`.
 
-### `/familiar`
+### `/gremlin`
 
 Main command. Shows rich ASCII art display with full stats, personality traits, current mood, and recent history.
 
-### `/familiar feed`
+### `/gremlin feed`
 
-Reduces hunger by 30, small happiness boost. Cooldown: 1 hour (familiar declines if fed too recently).
+Reduces hunger by 30, small happiness boost. Cooldown: 1 hour (gremlin declines if fed too recently).
 
-### `/familiar pet`
+### `/gremlin pet`
 
 Happiness boost of 20, small energy boost. Shorter cooldown than feeding.
 
-### `/familiar rest`
+### `/gremlin rest`
 
-Puts familiar to sleep. Energy restores rapidly over real-time hours. Status line shows sleeping pose. Wakes automatically or via any interaction.
+Puts gremlin to sleep. Energy restores rapidly over real-time hours. Status line shows sleeping pose. Wakes automatically or via any interaction.
 
-### `/familiar name <name>`
+### `/gremlin name <name>`
 
-Rename the familiar.
+Rename the gremlin.
 
-### `/familiar settings`
+### `/gremlin settings`
 
 Configure integration level (passive/nudge/active).
 
-### `/familiar setup`
+### `/gremlin setup`
 
-First-run onboarding: choose species, name familiar, pick integration level. Also serves as reset.
+First-run onboarding: choose species, name gremlin, pick integration level. Also serves as reset.
 
 ## Project Structure
 
 ```
-familiar/
+dot-gremlin/
 ├── core/                    # Node.js core logic
 │   ├── state.js             # State read/write, decay calculations
 │   ├── personality.js       # Trait shifts, preference learning
@@ -219,11 +219,11 @@ familiar/
 │   ├── post-tool-use.sh
 │   └── user-prompt-submit.sh
 ├── skills/                  # Slash command definitions
-│   └── familiar/
+│   └── gremlin/
 │       └── SKILL.md
 ├── statusline.sh            # Status line renderer
 ├── setup.sh                 # Installer
-├── CLAUDE.md                # Familiar personality context
+├── CLAUDE.md                # Gremlin personality context
 └── README.md
 ```
 
@@ -232,7 +232,7 @@ familiar/
 1. Clone/download the repo
 2. Run `./setup.sh`
 3. Setup script symlinks hooks into `~/.claude/settings.json`, copies skill, configures status line
-4. Next Claude Code session: `/familiar setup` triggers onboarding
+4. Next Claude Code session: `/gremlin setup` triggers onboarding
 
 ## Technical Constraints
 
