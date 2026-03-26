@@ -36,6 +36,10 @@ try {
 
 if (!settings.hooks) settings.hooks = {};
 
+function isGremlin(cmd) {
+  return cmd && (cmd.includes('gremlin') || cmd.includes('familiar'));
+}
+
 const hookConfigs = {
   SessionStart: { matcher: '', command: path.join(installDir, 'hooks', 'session-start.sh') },
   Stop: { matcher: '', command: path.join(installDir, 'hooks', 'stop.sh') },
@@ -48,8 +52,8 @@ for (const [event, config] of Object.entries(hookConfigs)) {
 
   // Remove any existing gremlin entries (old or new format)
   settings.hooks[event] = settings.hooks[event].filter(entry => {
-    if (entry.command && entry.command.includes('gremlin')) return false;
-    if (entry.hooks && entry.hooks.some(h => h.command && h.command.includes('gremlin'))) return false;
+    if (isGremlin(entry.command)) return false;
+    if (entry.hooks && entry.hooks.some(h => isGremlin(h.command))) return false;
     return true;
   });
 

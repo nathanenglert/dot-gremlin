@@ -17,11 +17,15 @@ try {
   settings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
 } catch { process.exit(0); }
 
+function isGremlin(cmd) {
+  return cmd && (cmd.includes('gremlin') || cmd.includes('familiar'));
+}
+
 if (settings.hooks) {
   for (const event of Object.keys(settings.hooks)) {
     settings.hooks[event] = settings.hooks[event].filter(entry => {
-      if (entry.command && entry.command.includes('gremlin')) return false;
-      if (entry.hooks && entry.hooks.some(h => h.command && h.command.includes('gremlin'))) return false;
+      if (isGremlin(entry.command)) return false;
+      if (entry.hooks && entry.hooks.some(h => isGremlin(h.command))) return false;
       return true;
     });
     if (settings.hooks[event].length === 0) {
@@ -33,7 +37,7 @@ if (settings.hooks) {
   }
 }
 
-if (settings.statusLine && settings.statusLine.command && settings.statusLine.command.includes('gremlin')) {
+if (settings.statusLine && isGremlin(settings.statusLine.command)) {
   delete settings.statusLine;
 }
 
