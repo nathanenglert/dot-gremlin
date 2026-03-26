@@ -19,9 +19,11 @@ try {
 
 if (settings.hooks) {
   for (const event of Object.keys(settings.hooks)) {
-    settings.hooks[event] = settings.hooks[event].filter(
-      entry => !(entry.hooks && entry.hooks.some(h => h.command && h.command.includes('gremlin')))
-    );
+    settings.hooks[event] = settings.hooks[event].filter(entry => {
+      if (entry.command && entry.command.includes('gremlin')) return false;
+      if (entry.hooks && entry.hooks.some(h => h.command && h.command.includes('gremlin'))) return false;
+      return true;
+    });
     if (settings.hooks[event].length === 0) {
       delete settings.hooks[event];
     }

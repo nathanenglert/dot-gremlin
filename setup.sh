@@ -45,18 +45,21 @@ const hookConfigs = {
 
 for (const [event, config] of Object.entries(hookConfigs)) {
   if (!settings.hooks[event]) settings.hooks[event] = [];
-  const existing = settings.hooks[event].find(
-    entry => entry.hooks && entry.hooks.some(h => h.command && h.command.includes('gremlin'))
-  );
-  if (!existing) {
-    settings.hooks[event].push({
-      matcher: config.matcher,
-      hooks: [{
-        type: 'command',
-        command: config.command,
-      }],
-    });
-  }
+
+  // Remove any existing gremlin entries (old or new format)
+  settings.hooks[event] = settings.hooks[event].filter(entry => {
+    if (entry.command && entry.command.includes('gremlin')) return false;
+    if (entry.hooks && entry.hooks.some(h => h.command && h.command.includes('gremlin'))) return false;
+    return true;
+  });
+
+  settings.hooks[event].push({
+    matcher: config.matcher,
+    hooks: [{
+      type: 'command',
+      command: config.command,
+    }],
+  });
 }
 
 fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
